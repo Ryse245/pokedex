@@ -1,12 +1,22 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 )
 
 func main() {
-	fmt.Printf("Hello, World!")
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for {
+		fmt.Printf("Pokedex >")
+		scanner.Scan()
+		text := scanner.Text()
+		clean := cleanInput(text)
+		fmt.Printf("Your command was: %s\n", clean[0])
+	}
 }
 
 func cleanInput(text string) []string {
@@ -20,7 +30,6 @@ func cleanInput(text string) []string {
 
 	for i := range ret {
 		ret[i] = strings.ToLower(ret[i])
-		fmt.Printf("Word %v: %v\n", i, ret[i])
 	}
 
 	return ret
