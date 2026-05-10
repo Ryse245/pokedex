@@ -7,7 +7,23 @@ import (
 	"strings"
 )
 
+func getCommands() map[string]clientCommand {
+	return map[string]clientCommand{
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    commandExit,
+		},
+		"help": {
+			name:        "help",
+			description: "Displays a help message",
+			callback:    commandHelp,
+		},
+	}
+}
+
 func main() {
+
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -15,8 +31,27 @@ func main() {
 		scanner.Scan()
 		text := scanner.Text()
 		clean := cleanInput(text)
-		fmt.Printf("Your command was: %s\n", clean[0])
+
+		command, exists := getCommands()[clean[0]]
+		if exists {
+			command.callback()
+		} else {
+			fmt.Printf("Unknown command\n")
+		}
 	}
+}
+func commandExit() error {
+	fmt.Println("Closing the Pokedex... Goodbye!")
+	os.Exit(0)
+	return nil
+}
+
+func commandHelp() error {
+	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n\n")
+	for _, command := range getCommands() {
+		fmt.Printf("%s: %s\n", command.name, command.description)
+	}
+	return nil
 }
 
 func cleanInput(text string) []string {
@@ -33,4 +68,10 @@ func cleanInput(text string) []string {
 	}
 
 	return ret
+}
+
+type clientCommand struct {
+	name        string
+	description string
+	callback    func() error
 }
