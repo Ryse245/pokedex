@@ -34,6 +34,11 @@ func getCommands() map[string]clientCommand {
 			description: "Displays previous Pokemon map data",
 			callback:    commandMapB,
 		},
+		"explore": {
+			name:        "explore",
+			description: "Print Pokemon in given area",
+			callback:    commandExplore,
+		},
 	}
 }
 
@@ -52,19 +57,23 @@ func main() {
 
 		command, exists := getCommands()[clean[0]]
 		if exists {
-			command.callback(&saveCommand, &pokeCache)
+			paramOne := ""
+			if len(clean) > 1 {
+				paramOne = clean[1]
+			}
+			command.callback(&saveCommand, &pokeCache, paramOne)
 		} else {
 			fmt.Printf("Unknown command\n")
 		}
 	}
 }
-func commandExit(config *commandInfo, cache *pokecache.Cache) error {
+func commandExit(config *commandInfo, _ *pokecache.Cache, _ string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(config *commandInfo, cache *pokecache.Cache) error {
+func commandHelp(config *commandInfo, _ *pokecache.Cache, _ string) error {
 	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n\n")
 	for _, command := range getCommands() {
 		fmt.Printf("%s: %s\n", command.name, command.description)
@@ -72,7 +81,7 @@ func commandHelp(config *commandInfo, cache *pokecache.Cache) error {
 	return nil
 }
 
-func commandMap(config *commandInfo, cache *pokecache.Cache) error {
+func commandMap(config *commandInfo, cache *pokecache.Cache, _ string) error {
 	url := config.next
 	if url == "" {
 		url = "https://pokeapi.co/api/v2/location-area/"
@@ -105,9 +114,38 @@ func commandMap(config *commandInfo, cache *pokecache.Cache) error {
 	return nil
 }
 
-func commandMapB(config *commandInfo, cache *pokecache.Cache) error {
+func commandMapB(config *commandInfo, cache *pokecache.Cache, _ string) error {
 	config.next = config.previous
-	commandMap(config, cache)
+	commandMap(config, cache, "")
+	return nil
+}
+
+func commandExplore(config *commandInfo, cache *pokecache.Cache, area string) error {
+	fmt.Printf("Exploring %s...\n", area)
+	url := "https://pokeapi.co/api/v2/location-area/" + area
+	cachedata, exist := cache.Get(url)
+	areaData := pokeAPIAreaResponse{}
+	if exist {
+		if err := json.Unmarshal(cachedata, &areaData); err != nil {
+			return err
+		}
+	} else {
+		res, err := http.Get(url)
+		if err != nil {
+			return err
+		}
+		defer res.Body.Close()
+		if err := json.NewDecoder(res.Body).Decode(&areaData); err != nil {
+			return err
+		}
+		marsh, _ := json.Marshal(areaData)
+		cache.Add(url, marsh)
+	}
+
+	for _, encounter := range areaData.PokemonEncounters {
+		fmt.Printf(" - %s\n", encounter.Pokemon.Name)
+	}
+
 	return nil
 }
 
@@ -135,5 +173,5 @@ type commandInfo struct {
 type clientCommand struct {
 	name        string
 	description string
-	callback    func(*commandInfo, *pokecache.Cache) error
+	callback    func(*commandInfo, *pokecache.Cache, string) error
 }
