@@ -9,6 +9,7 @@ type Cache struct {
 	cacheMap map[string]cacheEntry
 	interval time.Duration
 	mux      *sync.Mutex
+	pokeBox  map[string]Pokemon
 }
 
 type cacheEntry struct {
@@ -17,7 +18,7 @@ type cacheEntry struct {
 }
 
 func NewCache(interval time.Duration, mux *sync.Mutex) Cache {
-	ret := Cache{map[string]cacheEntry{}, interval, mux}
+	ret := Cache{map[string]cacheEntry{}, interval, mux, map[string]Pokemon{}}
 	ticker := time.NewTicker(interval)
 	go func() {
 		for range ticker.C {
@@ -41,6 +42,21 @@ func (c Cache) Get(key string) ([]byte, bool) {
 		return nil, false
 	}
 	return data.val, true
+}
+
+func (c Cache) AddPokemon(key string, val Pokemon) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.pokeBox[key] = val
+}
+
+func (c Cache) GetPokemon(key string) (Pokemon, bool) {
+	data, exist := c.pokeBox[key]
+	if exist {
+		return data, true
+	} else {
+		return Pokemon{}, false
+	}
 }
 
 func (c Cache) reapLoop() {
