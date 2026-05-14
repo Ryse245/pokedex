@@ -50,6 +50,11 @@ func getCommands() map[string]clientCommand {
 			description: "Get information about given Pokemon if it has been caught",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "Lists all the pokemon you have caught",
+			callback:    commandPokedex,
+		},
 	}
 }
 
@@ -187,6 +192,7 @@ func commandCatch(config *commandInfo, cache *pokecache.Cache, pokemon string) e
 	chance := rand.Intn(500)
 	if chance >= pokeData.BaseExperience {
 		fmt.Printf("%s was caught!\n", pokemon)
+		fmt.Println("You may now inspect it with the inspect command.")
 		cache.AddPokemon(pokemon, pokeData)
 	} else {
 		fmt.Printf("%s escaped!\n", pokemon)
@@ -211,6 +217,19 @@ func commandInspect(config *commandInfo, cache *pokecache.Cache, pokemon string)
 
 	} else {
 		fmt.Println("you have not caught that pokemon")
+	}
+	return nil
+}
+
+func commandPokedex(config *commandInfo, cache *pokecache.Cache, pokemon string) error {
+	caughtPokemon := cache.GetPokedex()
+	fmt.Println("Your Pokedex:")
+	if len(caughtPokemon) > 0 {
+		for _, name := range caughtPokemon {
+			fmt.Printf(" - %s\n", name)
+		}
+	} else {
+		fmt.Println("EMPTY")
 	}
 	return nil
 }

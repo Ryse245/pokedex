@@ -59,6 +59,16 @@ func (c Cache) GetPokemon(key string) (Pokemon, bool) {
 	}
 }
 
+func (c Cache) GetPokedex() []string {
+	keys := make([]string, len(c.pokeBox))
+	iter := 0
+	for poke := range c.pokeBox {
+		keys[iter] = poke
+		iter++
+	}
+	return keys
+}
+
 func (c Cache) reapLoop() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
