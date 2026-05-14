@@ -204,11 +204,11 @@ func commandInspect(config *commandInfo, cache *pokecache.Cache, pokemon string)
 	pokeData, exist := cache.GetPokemon(pokemon)
 	if exist {
 		fmt.Printf("Name: %s\n", pokeData.Name)
-		fmt.Printf("Height: %s\n", pokeData.Height)
-		fmt.Printf("Weight: %s\n", pokeData.Weight)
+		fmt.Printf("Height: %d\n", pokeData.Height)
+		fmt.Printf("Weight: %d\n", pokeData.Weight)
 		fmt.Println("Stats:")
 		for _, stat := range pokeData.Stats {
-			fmt.Printf("  -%s: %v\n", stat.Stat.Name, stat.BaseStat)
+			fmt.Printf("  -%s: %d\n", stat.Stat.Name, stat.BaseStat)
 		}
 		fmt.Println("Types:")
 		for _, pokeType := range pokeData.Types {
